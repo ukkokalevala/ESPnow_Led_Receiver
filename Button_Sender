@@ -1,0 +1,58 @@
+#include <esp_now.h>
+#include <WiFi.h>
+// 34:B4:72:4E:CB:74
+uint8_t broadcastAddress[] = {0x34, 0xB4, 0x72, 0x4E, 0xCB, 0x74}; // Replace with receiver's MAC address
+const int buttonPin = 8; // GPIO for button
+
+bool buttonState = false;
+bool lastButtonState = false;
+bool ledState = false;
+
+void onSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("Message Sent. Status: ");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
+}
+
+void setup() {
+  // Initialize Serial Monitor
+  Serial.begin(115200);
+
+  // Set device as a Wi-Fi Station
+  WiFi.mode(WIFI_STA);
+  Serial.print("ESP32-C3 MAC Address: ");
+  Serial.println(WiFi.macAddress());
+
+  // Initialize ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+
+  // Register send callback
+  esp_now_register_send_cb(onSent);
+
+  // Register peer
+  esp_now_peer_info_t peerInfo;
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  peerInfo.channel = 0;
+  peerInfo.encrypt = false;
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+    Serial.println("Failed to add peer");
+    return;
+  }
+
+  // Initialize button
+  pinMode(buttonPin, INPUT_PULLUP);
+}
+
+void loop() {
+  buttonState = digitalRead(buttonPin) == LOW; // Button is pressed
+
+  if (buttonState != lastButtonState && buttonState == true) {
+    ledState = !ledState; // Toggle LED state
+    esp_now_send(broadcastAddress, (uint8_t *)&ledState, sizeof(ledState));
+  }
+
+  lastButtonState = buttonState;
+  delay(50); // Debounce delay
+}
