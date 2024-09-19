@@ -1,7 +1,7 @@
 #include <esp_now.h>
 #include <WiFi.h>
 // 34:B4:72:4E:CB:74
-uint8_t broadcastAddress[] = {0x34, 0xB4, 0x72, 0x4E, 0xCB, 0x74}; // Replace with receiver's MAC address
+uint8_t broadcastAddress[] = {0x24, 0x6F, 0x28, 0xAA, 0xBB, 0xCC}; // Replace with receiver's MAC address
 const int buttonPin = 8; // GPIO for button
 
 bool buttonState = false;
